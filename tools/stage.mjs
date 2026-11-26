@@ -29,10 +29,15 @@ const allow = fs
   .map((line) => line.slice(1).replace(/\/$/, ''));
 
 const missing = allow.filter((p) => !fs.existsSync(path.join(ROOT, p)));
+
+// 文件被删掉是合法操作：跳过它（删除本身由 git add -A 之外的方式记录），但要明确告诉你
 if (missing.length) {
-  console.error(`清单里有不存在的路径：${missing.join(', ')}`);
-  process.exit(1);
+  console.log(`注意：清单里有 ${missing.length} 项已不存在（可能被删了），跳过：`);
+  for (const p of missing) console.log(`  - ${p}`);
+  console.log('');
 }
+
+const existing = allow.filter((p) => !missing.includes(p));
 
 // 被白名单挡在外面的顶层条目 —— 只是报告，不做判断
 const allowTop = new Set(allow.map((p) => p.split('/')[0]));
@@ -52,7 +57,7 @@ if (dry) {
   process.exit(0);
 }
 
-execFileSync('git', ['add', '--', ...allow], { cwd: ROOT, stdio: 'inherit' });
+execFileSync('git', ['add', '--', ...existing], { cwd: ROOT, stdio: 'inherit' });
 console.log('\n已暂存。下一步：');
 console.log('  git status --short      看暂存了什么');
 console.log('  git commit -m "..."     提交');

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 索引生成器 —— 读 index.json + articles/*.astro，校验后调用 astro build
  *
  *   pnpm gen            校验 + 构建
@@ -22,6 +22,46 @@ const warnings = [];
 
 const fail = (msg) => errors.push(msg);
 const warn = (msg) => warnings.push(msg);
+
+// ---------- 防呆：UTF-8 BOM ----------
+// Windows PowerShell 5.1 的 Set-Content -Encoding utf8 会写 BOM，
+// Vite 读 package.json 时会报 "Unexpected token ''"。这里提前拦住。
+const BOM = [0xef, 0xbb, 0xbf];
+const TEXT_EXT = new Set(['.json', '.mjs', '.js', '.ts', '.astro', '.css', '.md', '.txt', '.yml', '.yaml']);
+const SKIP_DIR = new Set(['node_modules', 'dist', '.astro', '.git', '.wrangler', 'drafts']);
+
+function checkBom(dir, depth = 0) {
+  if (depth > 6) return;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (SKIP_DIR.has(entry.name)) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      checkBom(full, depth + 1);
+    } else if (TEXT_EXT.has(path.extname(entry.name))) {
+      const fd = fs.openSync(full, 'r');
+      const head = Buffer.alloc(3);
+      fs.readSync(fd, head, 0, 3, 0);
+      fs.closeSync(fd);
+      if (head[0] === BOM[0] && head[1] === BOM[1] && head[2] === BOM[2]) {
+        fail(`文件开头有 UTF-8 BOM：${path.relative(ROOT, full)}（用无 BOM 的 UTF-8 重写）`);
+      }
+    }
+  }
+}
+
+try {
+  checkBom(ROOT);
+} catch (err) {
+  warn(`BOM 检查跳过：${err.message}`);
+}
+
+// BOM 会让后面的 JSON.parse 直接崩，所以先单独拦一次
+if (errors.length) {
+  console.error('');
+  for (const e of errors) console.error(`  ✗ ${e}`);
+  console.error('\n先修掉上面的问题，再跑一次。');
+  process.exit(1);
+}
 
 function extractMeta(source) {
   const anchor = source.indexOf('export const meta');
