@@ -677,7 +677,7 @@ code {
 
 pre {
   background: var(--paper-2) !important;
-  border: 1px solid var(--rule);
+  border: 0;
   border-radius: 2px;
   padding: 0.8rem 0.9rem;
   overflow-x: auto;
@@ -713,11 +713,10 @@ pre code { background: none; border: 0; padding: 0; }
 
 .toc {
   margin: 0 0 1.9rem;
-  padding: 0.7rem 0.95rem;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
+  padding: 0;
+  border: 0;
   font-family: var(--sans);
-  font-size: 0.82rem;
+  font-size: .82rem;
 }
 .toc .label {
   font-size: 0.7rem;
@@ -1039,14 +1038,8 @@ pre code { background: none; border: 0; padding: 0; }
   .blk-grid { grid-template-columns: 1fr; }
 }
 
-.blk {
-  min-width: 0;
-  padding: 0.75rem 0.85rem 0.85rem;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  transition: border-color 0.12s;
-}
-.blk:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
+/* 方块 = gwern 式的一列链接：无边框，靠标题点线与留白分隔 */
+.blk { min-width: 0; }
 
 .blk-head {
   display: flex;
