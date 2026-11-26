@@ -1,0 +1,124 @@
+﻿---
+import '../styles/global.css';
+import 'katex/dist/katex.min.css';
+import '@fontsource/noto-serif-sc/600.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = '开发日志与学习笔记：图形学、渲染、游戏开发。',
+} = Astro.props;
+
+const pageTitle = title ? `${title} · Ludimatics` : 'Ludimatics — 开发日志与学习笔记';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="article" />
+    <link rel="alternate" type="application/rss+xml" title="Ludimatics" href="/rss.xml" />
+    <link
+      rel="preload"
+      href="/fonts/XCharter-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/CodeNewRomanNFMono-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <script is:inline>
+      (() => {
+        const r = document.documentElement;
+        const t = localStorage.getItem('ld-theme');
+        const w = localStorage.getItem('ld-width');
+        const s = localStorage.getItem('ld-size');
+        if (t) r.dataset.theme = t;
+        if (w) r.dataset.width = w;
+        if (s) r.dataset.size = s;
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="site-head">
+      <a class="mark" href="/">Ludimatics</a>
+      <div class="head-right">
+        <nav>
+          <a href="/site/">SITE</a>
+          <a href="/list/">LIST</a>
+          <a href="/exploration/">EXPLORATION</a>
+          <a href="/about/">ABOUT</a>
+          <a href="/rss.xml">RSS</a>
+        </nav>
+        <div class="ctl">
+          <button type="button" data-act="theme" aria-label="明暗主题">◐</button>
+          <button type="button" data-act="width" aria-label="版心宽度">⇔</button>
+          <button type="button" data-act="size" aria-label="字号">A</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-foot">
+      <span>© 2026 Ludimatics</span>
+      <span>·</span>
+      <span>开发日志与学习笔记</span>
+    </footer>
+
+    <script>
+      const root = document.documentElement;
+
+      const seq: Record<string, string[]> = {
+        theme: ['', 'light', 'dark'],
+        width: ['', 'wide', 'narrow'],
+        size: ['', 'lg', 'xl', 'sm'],
+      };
+
+      const label: Record<string, Record<string, string>> = {
+        theme: { '': '◐', light: '☀', dark: '☾' },
+        width: { '': '⇔', wide: '⇔ 宽', narrow: '⇔ 窄' },
+        size: { '': 'A', lg: 'A+', xl: 'A++', sm: 'A−' },
+      };
+
+      const attr = (act: string) => (act === 'theme' ? 'theme' : act === 'width' ? 'width' : 'size');
+
+      document.querySelectorAll<HTMLButtonElement>('.ctl button').forEach((btn) => {
+        const act = btn.dataset.act ?? '';
+        const key = attr(act);
+        const current = root.dataset[key] ?? '';
+        btn.textContent = label[act]?.[current] ?? '';
+
+        btn.addEventListener('click', () => {
+          const list = seq[act] ?? [''];
+          const next = list[(list.indexOf(root.dataset[key] ?? '') + 1) % list.length];
+          if (next) {
+            root.dataset[key] = next;
+            localStorage.setItem(`ld-${key}`, next);
+          } else {
+            delete root.dataset[key];
+            localStorage.removeItem(`ld-${key}`);
+          }
+          btn.textContent = label[act]?.[next] ?? '';
+          window.dispatchEvent(new Event('resize'));
+        });
+      });
+    </script>
+  </body>
+</html>

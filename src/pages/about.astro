@@ -1,0 +1,39 @@
+﻿---
+import Base from '../layouts/Base.astro';
+import { loadIndex } from '../lib/index';
+
+const { site } = loadIndex();
+---
+
+<Base title="ABOUT" description={site.description}>
+  <article class="about">
+    <h1>关于</h1>
+
+    <p>
+      图形学本科生。这里放两样东西：<strong>开发日志</strong>（正在做的项目，做到哪一步、卡在哪）
+      和<strong>学习笔记</strong>（论文、课程、书，重写一遍的那种）。
+    </p>
+
+    <p>
+      写公开日志的理由很朴素：写给别人看的东西不会糊弄，
+      过半年回来查自己当初为什么这么选，也比翻聊天记录快。
+    </p>
+
+    <dl>
+      <dt>在做</dt>
+      <dd>渲染器 / 实时渲染实验，具体进展见<a href="/devlog/">开发日志</a>。</dd>
+
+      <dt>在读</dt>
+      <dd>图形学论文，笔记见<a href="/notes/">笔记</a>。</dd>
+
+      <dt>联系</dt>
+      <dd><code>{site.email}</code></dd>
+
+      <dt>字体</dt>
+      <dd>正文衬线用系统字体；代码用自托管的 <code>CodeNewRoman Nerd Font Mono</code>（SIL OFL 1.1，子集化后每份约 63 KB）。</dd>
+
+      <dt>订阅</dt>
+      <dd><a href="/rss.xml">RSS</a></dd>
+    </dl>
+  </article>
+</Base>

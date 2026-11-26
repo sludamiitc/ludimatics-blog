@@ -1,0 +1,62 @@
+---
+import Base from '../../layouts/Base.astro';
+import Block from '../../components/Block.astro';
+import EntryList from '../../components/EntryList.astro';
+import {
+  loadIndex,
+  loadArticles,
+  boardTopArticles,
+  latestArticles,
+  type BoardId,
+} from '../../lib/index';
+
+const index = loadIndex();
+const articles = loadArticles();
+
+const recent = latestArticles(articles, 4);
+const rows = recent.map((a) => ({
+  href: `/posts/${a.slug}/`,
+  label: a.date,
+  title: a.title,
+  summary: a.summary,
+  note: a.tags.slice(0, 2).join(' · '),
+}));
+
+// 板块是显式列出来的：SITE 是本页，另外两个各有一栏预览
+const boardIds: BoardId[] = ['list', 'exploration'];
+const boards = boardIds.map((id) => ({
+  id,
+  title: index.boards[id]?.title ?? id.toUpperCase(),
+  href: `/${id}/`,
+  items: boardTopArticles(index, id, articles, 6).map((a) => ({
+    href: `/posts/${a.slug}/`,
+    text: a.title,
+  })),
+}));
+---
+
+<Base title="SITE">
+  <section class="intro">
+    <p>
+      <strong>这是 YG 的网站。</strong>我读图形学，写渲染器，把踩过的坑和想通的事记下来。
+      文章按两种方式编目：<a href="/list/">LIST</a> 按时间，<a href="/exploration/">EXPLORATION</a> 按项目。
+      同一篇文章会同时出现在几处，这不是错误。
+    </p>
+    <p>
+      导航：按年代翻，去 <a href="/list/">LIST</a>；跟某个项目的进展，去
+      <a href="/exploration/">EXPLORATION</a>；关于我，见 <a href="/about/">About</a>；
+      订阅用 <a href="/rss.xml">RSS</a>。
+    </p>
+  </section>
+
+  <div class="cols">
+    {
+      boards.map((b) => (
+        <Block title={b.title} href={b.href} items={b.items} moreHref={b.href} moreLabel="全部 →" />
+      ))
+    }
+  </div>
+
+  <p class="section-label">最近更新</p>
+  <EntryList rows={rows} />
+</Base>

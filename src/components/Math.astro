@@ -1,0 +1,20 @@
+---
+import katex from 'katex';
+
+interface Props {
+  /** LaTeX 源码 */
+  tex: string;
+  /** 是否独占一行（display 模式） */
+  display?: boolean;
+}
+
+const { tex, display = false } = Astro.props;
+const html = katex.renderToString(tex, {
+  displayMode: display,
+  throwOnError: false,
+  strict: false,
+  trust: true,
+});
+---
+
+<Fragment set:html={html} />

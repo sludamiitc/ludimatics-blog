@@ -1,0 +1,12 @@
+---
+interface Props {
+  /** 代码正文。用模板字符串传：code={`...`}；若含 ${，写成 \${ */
+  code: string;
+  /** 语言标签，仅用于显示 */
+  lang?: string;
+}
+
+const { code, lang } = Astro.props;
+---
+
+<pre><code data-lang={lang}>{code}</code></pre>

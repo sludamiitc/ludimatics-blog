@@ -1,0 +1,17 @@
+---
+/**
+ * 边注。写在正文任意位置：
+ *   <Note>这句可以放补充说明</Note>
+ * 宽屏时出现在右侧留白，窄屏时退化为左边框引用块。
+ */
+interface Props {
+  /** 可选编号，显示在注记左上角 */
+  n?: string | number;
+}
+const { n } = Astro.props;
+---
+
+<aside class="sidenote">
+  {n && <span class="sidenote-n">{n}</span>}
+  <slot />
+</aside>

@@ -1,0 +1,12 @@
+﻿XCharter / Charter notice
+
+- 字体：XCharter（Bitstream Charter 的扩展版），作者 A. Reutenauer 等
+- 许可：SIL Open Font License 1.1（可再分发，需保留许可）
+- 上游：CTAN fonts/xcharter
+- 本站文件：XCharter-{Regular,Italic,Bold}.woff2
+- 处理：pyftsubset 子集化（Latin / 标点 / 箭头），每份 22–28 KB；不含 CJK
+- 完整许可证见 CTAN 包内的 XCharter.txt / OFL.txt
+
+CodeNewRoman Nerd Font Mono
+- 上游：Code New Roman（SIL OFL 1.1），Nerd Fonts 打包
+- 本站文件：CodeNewRomanNFMono-{Regular,Bold,Italic}.woff2，每份约 63 KB

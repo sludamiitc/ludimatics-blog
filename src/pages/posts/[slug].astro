@@ -1,0 +1,38 @@
+---
+import Article from '../../layouts/Article.astro';
+import { registry } from '../../lib/articles.registry';
+import { loadIndex, loadArticles, listsContaining } from '../../lib/index';
+
+export async function getStaticPaths() {
+  const articles = loadArticles();
+  return [...articles.values()]
+    .filter((a) => a.status !== 'draft')
+    .map((meta) => ({ params: { slug: meta.slug }, props: { meta } }));
+}
+
+const { meta } = Astro.props;
+
+const where = listsContaining(loadIndex(), meta.slug);
+const primary = where[0];
+
+const crumbs = primary
+  ? [
+      { href: `/${primary.board}/`, label: primary.board.toUpperCase() },
+      { href: `/${primary.board}/${primary.list.id}/`, label: primary.list.title },
+      { href: `/posts/${meta.slug}/`, label: primary.entry.id },
+    ]
+  : [];
+
+// 显式注册表：slug → 组件，由 pnpm gen 生成，不做约定式发现
+const loader = registry[meta.slug];
+
+if (!loader) {
+  throw new Error(`注册表里没有这篇文章：${meta.slug}（先跑 pnpm gen）`);
+}
+
+const { default: Body } = (await loader()) as { default: any };
+---
+
+<Article meta={meta} crumbs={crumbs}>
+  <Body />
+</Article>

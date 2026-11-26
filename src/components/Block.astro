@@ -1,0 +1,46 @@
+---
+export interface BlockItem {
+  href: string;
+  text: string;
+  /** 左侧小标记，通常是 11-25 这种条目 id */
+  mark?: string;
+}
+
+interface Props {
+  title: string;
+  href?: string;
+  /** 标题右侧的小字：计数或状态 */
+  meta?: string;
+  items: BlockItem[];
+  moreHref?: string;
+  moreLabel?: string;
+}
+
+const { title, href, meta, items, moreHref, moreLabel = '全部 →' } = Astro.props;
+---
+
+<section class="blk">
+  <header class="blk-head">
+    {href ? <a href={href}>{title}</a> : <span>{title}</span>}
+    {meta && <span class="blk-meta">{meta}</span>}
+  </header>
+
+  {
+    items.length > 0 ? (
+      <ul class="blk-list">
+        {items.map((item) => (
+          <li>
+            {item.mark && <span class="blk-mark">{item.mark}</span>}
+            <a href={item.href} title={item.text}>
+              {item.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="blk-empty">—</p>
+    )
+  }
+
+  {moreHref && <a class="blk-more" href={moreHref}>{moreLabel}</a>}
+</section>

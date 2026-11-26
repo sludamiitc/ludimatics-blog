@@ -1,0 +1,42 @@
+---
+import Base from '../../layouts/Base.astro';
+import { loadIndex, loadArticles, boardLists, orderedItems } from '../../lib/index';
+
+export async function getStaticPaths() {
+  const index = loadIndex();
+  return boardLists(index, 'exploration').map((list) => ({ params: { list: list.id }, props: { list } }));
+}
+
+const { list } = Astro.props;
+const articles = loadArticles();
+const items = orderedItems(list, 'exploration');
+---
+
+<Base title={`${list.title} · EXPLORATION`} description={list.desc}>
+  <p class="crumb"><a href="/exploration/">EXPLORATION</a> › {list.title}</p>
+
+  <header class="proj-page-head">
+    <h1 class="page-title">{list.title}</h1>
+    {list.status && <span class={`proj-status ${list.status === '进行中' ? 'on' : ''}`}>{list.status}</span>}
+  </header>
+  {list.period && <p class="proj-period">{list.period}</p>}
+  {list.desc && <p class="lede" style="margin-bottom:2rem">{list.desc}</p>}
+
+  <ul class="tl">
+    {
+      items.map((item) => {
+        const a = articles.get(item.article);
+        if (!a) return null;
+        return (
+          <li>
+            <a href={`/posts/${a.slug}/`}>
+              <span class="eid">{item.id}</span>
+              <span class="et">{a.title}</span>
+              {item.note && <span class="em">{item.note}</span>}
+            </a>
+          </li>
+        );
+      })
+    }
+  </ul>
+</Base>

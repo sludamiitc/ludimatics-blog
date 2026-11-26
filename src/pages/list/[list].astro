@@ -1,0 +1,30 @@
+---
+import Base from '../../layouts/Base.astro';
+import EntryList from '../../components/EntryList.astro';
+import { loadIndex, loadArticles, boardLists } from '../../lib/index';
+
+export async function getStaticPaths() {
+  const index = loadIndex();
+  return boardLists(index, 'list').map((list) => ({ params: { list: list.id }, props: { list } }));
+}
+
+const { list } = Astro.props;
+const articles = loadArticles();
+
+const rows = list.items
+  .map((item) => {
+    const a = articles.get(item.article);
+    if (!a || a.status !== 'published') return null;
+    return { href: `/posts/${a.slug}/`, label: item.id, title: a.title, summary: a.summary, note: item.note };
+  })
+  .filter((r): r is NonNullable<typeof r> => r !== null)
+  .sort((x, y) => (x.label! < y.label! ? 1 : -1));
+---
+
+<Base title={`${list.title} · LIST`} description={list.desc}>
+  <p class="crumb"><a href="/list/">LIST</a> › {list.title}</p>
+  <h1 class="page-title">{list.title}</h1>
+  {list.desc && <p class="lede" style="margin-bottom:2rem">{list.desc}</p>}
+
+  {rows.length > 0 ? <EntryList rows={rows} /> : <p class="empty">这一年还没有文章。</p>}
+</Base>
