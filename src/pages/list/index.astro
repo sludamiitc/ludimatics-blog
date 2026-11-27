@@ -1,16 +1,14 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { loadIndex, loadArticles, boardLists, orderedItems } from '../../lib/index';
+import { loadIndex, loadArticles, resolveIndex, boardLists } from '../../lib/index';
 
-const index = loadIndex();
 const articles = loadArticles();
-const lists = [...boardLists(index, 'list')].sort((a, b) => (a.id < b.id ? 1 : -1));
+const lists = boardLists(resolveIndex(loadIndex(), articles), 'list');
 ---
 
-<Base title="LIST" description="按时间索引">
+<Base title="LIST">
   <header class="board-head">
     <h1 class="board-title">LIST</h1>
-    <p class="lede">按时间索引。从上到下，从新到旧；一年一组。</p>
   </header>
 
   {
@@ -20,7 +18,7 @@ const lists = [...boardLists(index, 'list')].sort((a, b) => (a.id < b.id ? 1 : -
           <a href={`/list/${list.id}/`}>{list.title}</a>
         </h2>
         <ul class="tl">
-          {orderedItems(list, 'list').map((item) => {
+          {list.items.map((item) => {
             const a = articles.get(item.article);
             if (!a) return null;
             return (

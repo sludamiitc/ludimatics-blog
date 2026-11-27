@@ -1,11 +1,14 @@
 /**
- * 索引生成器 —— 读 index.json + articles/*.astro，校验后调用 astro build
+ * 索引生成器 —— 读 index.json 骨架 + articles/*.astro 的声明，校验后调用 astro build
  *
  *   pnpm gen            校验 + 构建
  *   pnpm gen --check    只校验，不构建
  *
- * 校验项：列表 id 唯一 / 条目 id 在列表内唯一 / article 指向的文件存在且能解析 meta
- * 报告项：孤儿文章（在 articles 里但没进任何列表）、缺失文章（索引引用了不存在的文件）
+ * index.json 只描述骨架：板块的 source、列表的 id / title / desc，不含任何条目。
+ * 归属来自每篇文章的 meta.lists；source=date 的板块由 meta.date 编年。
+ *
+ * 校验项：source 合法 / 列表 id 全站唯一 / 声明指向存在的列表 / 列表内条目 id 不重复
+ * 报告项：没有声明任何列表的文章（只会出现在编年板块）
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -118,58 +121,106 @@ fs.mkdirSync(path.dirname(registryPath), { recursive: true });
 fs.writeFileSync(registryPath, registrySource, 'utf8');
 console.log(`注册表：${articles.size} 个条目 → src/lib/articles.registry.ts`);
 const index = JSON.parse(fs.readFileSync(INDEX_PATH, 'utf8'));
-const referenced = new Set();
 
+// ---------- 骨架：source 决定列表从哪来 ----------
+const listOwner = new Map(); // list id → board id，全站唯一
 for (const board of BOARD_IDS) {
-  const lists = index.boards?.[board]?.lists;
-  if (!Array.isArray(lists)) {
-    fail(`index.json 缺少 boards.${board}.lists`);
+  const b = index.boards?.[board];
+  if (!b) {
+    fail(`index.json 缺少 boards.${board}`);
+    continue;
+  }
+  if (!b.title) fail(`boards.${board} 缺 title`);
+
+  if (b.source !== 'date' && b.source !== 'declared') {
+    fail(`boards.${board}.source 必须是 "date" 或 "declared"`);
+    continue;
+  }
+
+  if (b.source === 'date') {
+    if (b.lists?.length) fail(`boards.${board} 是 source=date，不要写 lists（年份由文章 date 生成）`);
+    for (const y of Object.keys(b.yearNotes ?? {})) {
+      if (!/^\d{4}$/.test(y)) fail(`boards.${board}.yearNotes 的键不是四位年份：${y}`);
+    }
+    continue;
+  }
+
+  if (!Array.isArray(b.lists)) {
+    fail(`boards.${board} 缺少 lists 数组`);
     continue;
   }
 
   const seenListIds = new Set();
-  for (const list of lists) {
-    if (!list.id) fail(`boards.${board} 有列表缺 id`);
+  for (const list of b.lists) {
+    if (!list.id) {
+      fail(`boards.${board} 有列表缺 id`);
+      continue;
+    }
     if (seenListIds.has(list.id)) fail(`boards.${board} 列表 id 重复：${list.id}`);
     seenListIds.add(list.id);
     if (!list.title) fail(`boards.${board}.${list.id} 缺 title`);
-    if (!Array.isArray(list.items)) {
-      fail(`boards.${board}.${list.id} 缺 items 数组`);
-      continue;
-    }
-
-    const seenEntryIds = new Set();
-    for (const item of list.items) {
-      if (!item.id) fail(`boards.${board}.${list.id} 有条目缺 id`);
-      if (seenEntryIds.has(item.id)) fail(`boards.${board}.${list.id} 条目 id 重复：${item.id}`);
-      seenEntryIds.add(item.id);
-
-      if (!item.article) {
-        fail(`boards.${board}.${list.id}/${item.id} 缺 article`);
-        continue;
-      }
-      if (!articles.has(item.article)) {
-        fail(`boards.${board}.${list.id}/${item.id} 指向不存在的文章：${item.article}`);
-      } else {
-        referenced.add(item.article);
-      }
-    }
+    if ('items' in list) fail(`boards.${board}.${list.id} 不该有 items —— 归属写在文章的 meta.lists 里`);
+    if (listOwner.has(list.id)) fail(`列表 id 全站唯一，重复：${list.id}`);
+    else listOwner.set(list.id, board);
   }
 }
 
-for (const slug of articles.keys()) {
-  if (!referenced.has(slug)) warn(`文章没进任何列表：${slug}`);
+// ---------- 文章声明 ----------
+const placed = new Map(); // `${list}/${id}` → slug
+let placedCount = 0;
+
+for (const [slug, meta] of articles) {
+  if (meta.status !== 'published') continue;
+  if (meta.lists === undefined) continue;
+  if (!Array.isArray(meta.lists)) {
+    fail(`${slug} 的 meta.lists 必须是数组`);
+    continue;
+  }
+
+  for (const p of meta.lists) {
+    if (!p || typeof p !== 'object') {
+      fail(`${slug} 的 meta.lists 有非对象元素`);
+      continue;
+    }
+    if (!p.list) {
+      fail(`${slug} 的 meta.lists 有条目缺 list`);
+      continue;
+    }
+    if (!p.id) {
+      fail(`${slug} 的 meta.lists 有条目缺 id`);
+      continue;
+    }
+    if (p.list_index !== undefined && !Number.isFinite(p.list_index)) {
+      fail(`${slug} 的 meta.lists（${p.list}）的 list_index 必须是数字`);
+    }
+    if (!listOwner.has(p.list)) {
+      fail(`${slug} 声明进了不存在的列表：${p.list}`);
+      continue;
+    }
+
+    const key = `${p.list}/${p.id}`;
+    if (placed.has(key)) fail(`列表 ${p.list} 内条目 id 重复：${p.id}（${placed.get(key)} / ${slug}）`);
+    else placed.set(key, slug);
+    placedCount++;
+  }
 }
 
 // ---------- 报告 ----------
-const total = BOARD_IDS.reduce(
-  (n, b) => n + (index.boards?.[b]?.lists ?? []).reduce((m, l) => m + (l.items?.length ?? 0), 0),
-  0,
+for (const [slug, meta] of articles) {
+  if (meta.status === 'published' && !meta.lists?.length) {
+    warn(`只进编年板块（未声明列表）：${slug}`);
+  }
+}
+
+const years = new Set(
+  [...articles.values()]
+    .filter((a) => a.status === 'published')
+    .map((a) => a.date.slice(0, 4)),
 );
 
 console.log('');
-console.log(`索引：${BOARD_IDS.map((b) => `${b}=${index.boards?.[b]?.lists?.length ?? 0} 列表`).join('  ')}`);
-console.log(`文章：${articles.size} 个组件，${total} 条索引引用`);
+console.log(`板块：${BOARD_IDS.map((b) => `${b}(${index.boards?.[b]?.source ?? '?'})`).join('  ')}`);
+console.log(`文章：${articles.size} 个组件，${placedCount} 条声明，编年 ${years.size} 个年份`);
 for (const w of warnings) console.log(`  ! ${w}`);
 for (const e of errors) console.log(`  ✗ ${e}`);
 console.log('');

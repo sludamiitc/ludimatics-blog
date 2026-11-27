@@ -9,20 +9,17 @@ export interface BlockItem {
 interface Props {
   title: string;
   href?: string;
-  /** 标题右侧的小字：计数或状态 */
-  meta?: string;
   items: BlockItem[];
   moreHref?: string;
   moreLabel?: string;
 }
 
-const { title, href, meta, items, moreHref, moreLabel = '全部 →' } = Astro.props;
+const { title, href, items, moreHref, moreLabel = '全部 →' } = Astro.props;
 ---
 
 <section class="blk">
   <header class="blk-head">
     {href ? <a href={href}>{title}</a> : <span>{title}</span>}
-    {meta && <span class="blk-meta">{meta}</span>}
   </header>
 
   {

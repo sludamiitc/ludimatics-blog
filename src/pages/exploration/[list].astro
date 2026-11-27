@@ -1,15 +1,16 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { loadIndex, loadArticles, boardLists, orderedItems } from '../../lib/index';
+import { loadIndex, loadArticles, resolveIndex, boardLists } from '../../lib/index';
 
 export async function getStaticPaths() {
-  const index = loadIndex();
+  const articles = loadArticles();
+  const index = resolveIndex(loadIndex(), articles);
   return boardLists(index, 'exploration').map((list) => ({ params: { list: list.id }, props: { list } }));
 }
 
 const { list } = Astro.props;
 const articles = loadArticles();
-const items = orderedItems(list, 'exploration');
+const items = list.items;
 ---
 
 <Base title={`${list.title} · EXPLORATION`} description={list.desc}>
@@ -17,7 +18,6 @@ const items = orderedItems(list, 'exploration');
 
   <header class="proj-page-head">
     <h1 class="page-title">{list.title}</h1>
-    {list.status && <span class={`proj-status ${list.status === '进行中' ? 'on' : ''}`}>{list.status}</span>}
   </header>
   {list.period && <p class="proj-period">{list.period}</p>}
   {list.desc && <p class="lede" style="margin-bottom:2rem">{list.desc}</p>}

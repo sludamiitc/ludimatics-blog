@@ -1,27 +1,23 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Block from '../../components/Block.astro';
-import { loadIndex, loadArticles, boardLists, orderedItems } from '../../lib/index';
+import { loadIndex, loadArticles, resolveIndex, boardLists } from '../../lib/index';
 
-const index = loadIndex();
 const articles = loadArticles();
-const lists = boardLists(index, 'exploration');
+const lists = boardLists(resolveIndex(loadIndex(), articles), 'exploration');
 ---
 
-<Base title="EXPLORATION" description="按项目索引">
+<Base title="EXPLORATION">
   <header class="board-head">
     <h1 class="board-title">EXPLORATION</h1>
-    <p class="lede">按项目索引。一个方块是一个项目，右边是它的状态。</p>
   </header>
-
   <div class="blk-grid">
     {
       lists.map((list) => (
         <Block
           title={list.title}
           href={`/exploration/${list.id}/`}
-          meta={list.status}
-          items={orderedItems(list, 'exploration').map((item) => {
+          items={list.items.map((item) => {
             const a = articles.get(item.article);
             return a
               ? { href: `/posts/${a.slug}/`, text: a.title, mark: item.id }

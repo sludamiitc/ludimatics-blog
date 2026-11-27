@@ -110,16 +110,16 @@ html { font-size: 16px; }                          /* 手机 */
 四处，缺一不可：
 
 ```
-① index.json          "boards" 里加 "topic": { title, note, lists: [] }
+① index.json          "boards" 里加 "topic": { title, note, source: "declared", lists: [] }
+                      source 只有两个值：date（由文章 date 编年）/ declared（由文章 meta.lists 声明）
 ② src/lib/index.ts    BoardId 类型加上 'topic'
 ③ src/pages/topic/index.astro        照抄 exploration/index.astro 改文案
    src/pages/topic/[list].astro      照抄单列表页
 ④ src/layouts/Base.astro  nav 里加一行 <a href="/topic/">TOPIC</a>
    tools/build.mjs         BOARD_IDS 常量加上 'topic'
-   tools/publish.mjs       BOARDS 常量加上 'topic'
 ```
 
-`BOARD_IDS` 不是可有可无的：校验器和发布器都靠它枚举板块，漏了就检查不到。
+`BOARD_IDS` 不是可有可无的：校验器靠它枚举板块，漏了就检查不到。发布器不枚举板块——它不碰 `index.json`。
 
 ---
 

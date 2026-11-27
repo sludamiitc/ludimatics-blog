@@ -1,10 +1,11 @@
 ---
 import Base from '../../layouts/Base.astro';
 import EntryList from '../../components/EntryList.astro';
-import { loadIndex, loadArticles, boardLists } from '../../lib/index';
+import { loadIndex, loadArticles, resolveIndex, boardLists } from '../../lib/index';
 
 export async function getStaticPaths() {
-  const index = loadIndex();
+  const articles = loadArticles();
+  const index = resolveIndex(loadIndex(), articles);
   return boardLists(index, 'list').map((list) => ({ params: { list: list.id }, props: { list } }));
 }
 
@@ -17,8 +18,7 @@ const rows = list.items
     if (!a || a.status !== 'published') return null;
     return { href: `/posts/${a.slug}/`, label: item.id, title: a.title, summary: a.summary, note: item.note };
   })
-  .filter((r): r is NonNullable<typeof r> => r !== null)
-  .sort((x, y) => (x.label! < y.label! ? 1 : -1));
+  .filter((r): r is NonNullable<typeof r> => r !== null);
 ---
 
 <Base title={`${list.title} · LIST`} description={list.desc}>

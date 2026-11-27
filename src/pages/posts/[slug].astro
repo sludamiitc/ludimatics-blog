@@ -1,7 +1,7 @@
 ---
 import Article from '../../layouts/Article.astro';
 import { registry } from '../../lib/articles.registry';
-import { loadIndex, loadArticles, listsContaining } from '../../lib/index';
+import { loadIndex, loadArticles, resolveIndex, listsContaining } from '../../lib/index';
 
 export async function getStaticPaths() {
   const articles = loadArticles();
@@ -12,7 +12,7 @@ export async function getStaticPaths() {
 
 const { meta } = Astro.props;
 
-const where = listsContaining(loadIndex(), meta.slug);
+const where = listsContaining(resolveIndex(loadIndex(), loadArticles()), meta.slug);
 const primary = where[0];
 
 const crumbs = primary

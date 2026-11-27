@@ -96,7 +96,7 @@ Pages 项目 → **Custom domains** → Set up a domain → 填裸域 → Contin
 blog/
 ├── articles/     公开区：会进构建、会进仓库、会出现在线上
 ├── drafts/       私有区：被 .gitignore 排除，不提交、不构建、不上线
-├── index.json    索引（只包含公开区的条目）
+├── index.json    骨架：板块的 source、列表的 id / 标题 / 说明（不含任何条目）
 └── src/
 ```
 
@@ -106,11 +106,20 @@ blog/
 
 ```powershell
 pnpm ls                       # 看哪些在公开区、哪些在私有区
-pnpm pub <slug>               # drafts/<slug>.astro → articles/，写进 index.json（默认 list 板块、当年）
-pnpm pub <slug> --board exploration --list softraster
-pnpm pub <slug> --board list --list 2026 --id 11-25
-pnpm unpub <slug>             # 反向：移回 drafts/，并删掉索引里的所有引用
+pnpm pub <slug>               # drafts/<slug>.astro → articles/，不碰 index.json
+pnpm unpub <slug>             # 反向：移回 drafts/
 ```
+
+**归属写在文章自己身上**，发布器不再改索引：
+
+```js
+export const meta = {
+  // …
+  lists: [{ list: 'softraster', id: '11-25', list_index: 1, note: '第一版' }],
+};
+```
+
+不写 `lists` 的文章只出现在 LIST（编年板块由 `date` 自动生成）。
 
 `pub` 会顺手把文章 `meta.status` 改成 `published`，`unpub` 改回 `draft`。
 
@@ -135,7 +144,7 @@ pnpm stage          # 真正暂存
 ## 7. 日常发布流程
 
 ```powershell
-pnpm edit        # 浏览器里改索引（板块 / 列表 / 条目）
+pnpm edit        # 浏览器里改骨架（板块 / 列表的 id 与说明；条目只读）
 pnpm pub <slug>  # 如果这篇是新写的
 pnpm gen         # 本地校验 + 构建，先确认不报错
 pnpm stage       # 只暂存白名单里的路径
@@ -150,7 +159,7 @@ git push         # Cloudflare 自动构建上线
 
 | 现象 | 原因 |
 |---|---|
-| 构建失败，报 registry 缺文章 | `index.json` 里的 `article` 与 `articles/` 文件名不一致，本地 `pnpm check` 会直接指出来 |
+| 构建失败，报「声明进了不存在的列表」 | 文章 `meta.lists[].list` 拼错，或那个列表还没在 `index.json` 里建 |
 | 域名 522 | DNS 里手加了 CNAME 指向 pages.dev，删掉，走 Custom domains |
 | 证书一直 pending | 域上有 CAA 记录，需允许 `letsencrypt.org`、`pki.goog`、`ssl.com` |
 | 打开是空白或 404 | 构建输出目录填错，必须是 `dist` |

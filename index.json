@@ -10,41 +10,27 @@
     "list": {
       "title": "LIST",
       "note": "按时间",
-      "lists": [
-        {
-          "id": "2026",
-          "title": "2026",
-          "desc": "开始记日志的第一年。",
-          "items": [
-            {
-              "id": "11-25",
-              "article": "devlog-first-renderer"
-            },
-            {
-              "id": "11-20",
-              "article": "note-brdf-importance-sampling"
-            }
-          ]
-        }
-      ]
+      "source": "date",
+      "yearNotes": {
+        "2026": "开始记日志的第一年。"
+      }
     },
     "exploration": {
       "title": "EXPLORATION",
       "note": "按项目",
+      "source": "declared",
       "lists": [
         {
           "id": "softraster",
-          "title": "软光栅",
+          "title": "softraster",
           "desc": "纯 CPU 的光栅化器，从零写起，目标是先跑通再到软光追。",
-          "status": "进行中",
-          "period": "2026-11 → 至今",
-          "items": [
-            {
-              "id": "11-25",
-              "article": "devlog-first-renderer",
-              "note": "第一版"
-            }
-          ]
+          "period": "2026-11 ~ today"
+        },
+        {
+          "id": "math-learning",
+          "title": "草舍耕锄之后，怎么学习数学？",
+          "desc": "",
+          "period": ""
         }
       ]
     }

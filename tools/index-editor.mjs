@@ -3,8 +3,9 @@
  *
  *   pnpm edit        然后打开 http://127.0.0.1:7777
  *
- * 三级维护：板块（SITE / LIST / EXPLORATION）→ 列表 → 条目（指向 articles/<slug>.astro）
- * 只读写 index.json；文章的标题、日期、标签在文章自己的 meta 里，这里只读不写。
+ * 只维护骨架：板块（LIST / EXPLORATION）→ 列表（id / 标题 / 说明 / 时间跨度）。
+ * 条目（哪篇在哪个列表、列表内编号 list_index）写在文章的 meta.lists 里，本页只读展示。
+ * source=date 的板块（LIST）由文章日期编年，页面上不可编辑。
  */
 import http from 'node:http';
 import fs from 'node:fs';
@@ -50,7 +51,15 @@ function articlePool() {
     .map((file) => {
       const slug = file.replace(/\.astro$/, '');
       const meta = extractMeta(fs.readFileSync(path.join(ARTICLES_DIR, file), 'utf8')) ?? {};
-      return { slug, title: meta.title ?? slug, date: meta.date ?? '', tags: meta.tags ?? [] };
+      return {
+        slug,
+        title: meta.title ?? slug,
+        subtitle: meta.subtitle ?? '',
+        date: meta.date ?? '',
+        tags: meta.tags ?? [],
+        status: meta.status ?? 'published',
+        lists: Array.isArray(meta.lists) ? meta.lists : [],
+      };
     })
     .sort((a, b) => (a.date < b.date ? 1 : -1));
 }
@@ -97,6 +106,8 @@ export const meta = {
   tags: [],
   summary: '',
   status: 'draft',
+  // 归属：进哪个列表、列表内编号。不加这一行就只出现在 LIST。
+  // lists: [{ list: 'softraster', id: '11-25', list_index: 1, note: '第一版' }],
 };
 ---
 

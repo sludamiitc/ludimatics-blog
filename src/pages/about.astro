@@ -6,34 +6,13 @@ const { site } = loadIndex();
 ---
 
 <Base title="ABOUT" description={site.description}>
+  <header class="board-head">
+    <h1 class="board-title">ABOUT</h1>
+  </header>
   <article class="about">
-    <h1>关于</h1>
-
     <p>
-      图形学本科生。这里放两样东西：<strong>开发日志</strong>（正在做的项目，做到哪一步、卡在哪）
-      和<strong>学习笔记</strong>（论文、课程、书，重写一遍的那种）。
+      一个正在修行的图形学学者，这里主要放一些我愿意公布的我在学习和工作方面的思考和想法。
+      我觉得把一些琐碎的思考写下来总是没有错的。
     </p>
-
-    <p>
-      写公开日志的理由很朴素：写给别人看的东西不会糊弄，
-      过半年回来查自己当初为什么这么选，也比翻聊天记录快。
-    </p>
-
-    <dl>
-      <dt>在做</dt>
-      <dd>渲染器 / 实时渲染实验，具体进展见<a href="/devlog/">开发日志</a>。</dd>
-
-      <dt>在读</dt>
-      <dd>图形学论文，笔记见<a href="/notes/">笔记</a>。</dd>
-
-      <dt>联系</dt>
-      <dd><code>{site.email}</code></dd>
-
-      <dt>字体</dt>
-      <dd>正文衬线用系统字体；代码用自托管的 <code>CodeNewRoman Nerd Font Mono</code>（SIL OFL 1.1，子集化后每份约 63 KB）。</dd>
-
-      <dt>订阅</dt>
-      <dd><a href="/rss.xml">RSS</a></dd>
-    </dl>
   </article>
 </Base>

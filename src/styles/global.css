@@ -434,15 +434,6 @@ main { padding: 2.2rem 0 5rem; }
 
 .prose p { margin: 0; }
 
-/* gwern 式首字下沉：只作用于正文第一段 */
-.prose > p:first-of-type::first-letter {
-  float: left;
-  font-size: 2.55em;
-  line-height: 0.92;
-  padding: 0.08em 0.07em 0 0;
-  font-weight: 600;
-  color: var(--ink);
-}
 
 .prose h2 {
   counter-increment: h2;
@@ -913,19 +904,6 @@ pre code { background: none; border: 0; padding: 0; }
 }
 .proj-head { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; }
 .proj-head h2 { font-family: var(--serif); font-size: 1.22rem; margin: 0; font-weight: 600; }
-.proj-status {
-  font-family: var(--sans);
-  font-size: .66rem;
-  letter-spacing: .1em;
-  color: var(--ink-faint);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: .04rem .34rem;
-}
-.proj-status.on {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-}
 .proj-period {
   font-family: var(--sans);
   font-size: .73rem;
@@ -1000,14 +978,7 @@ pre code { background: none; border: 0; padding: 0; }
   line-height: 1.72;
   color: var(--ink);
 }
-.intro p:first-child::first-letter {
-  float: left;
-  font-size: 3.1em;
-  line-height: .88;
-  padding: .06em .1em 0 0;
-  font-family: var(--serif);
-  font-weight: 600;
-}
+
 .intro a {
   color: var(--link);
   text-decoration: none;
@@ -1015,15 +986,6 @@ pre code { background: none; border: 0; padding: 0; }
 }
 .intro a:hover { border-bottom-color: var(--link); }
 .intro strong { font-weight: 650; }
-
-/* ============ 紧凑方块（gwern 式） ============ */
-.cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-  gap: 1.8rem;
-  margin: 2.2rem 0 2.6rem;
-}
-@media (max-width: 860px) { .cols { grid-template-columns: 1fr; gap: 1.4rem; } }
 
 .blk-grid {
   display: grid;
@@ -1057,13 +1019,6 @@ pre code { background: none; border: 0; padding: 0; }
 .blk-head a,
 .blk-head > span { color: var(--ink); text-decoration: none; }
 .blk-head a:hover { color: var(--accent); }
-.blk-meta {
-  font-size: .67rem;
-  letter-spacing: .08em;
-  color: var(--ink-faint);
-  text-transform: none;
-  font-variant-numeric: tabular-nums;
-}
 
 .blk-list { list-style: none; margin: 0; padding: 0; }
 .blk-list li {
