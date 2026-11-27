@@ -1,24 +1,33 @@
 /**
- * 索引生成器 —— 读 index.json 骨架 + articles/*.astro 的声明，校验后调用 astro build
+ * 索引生成器 —— 读 index.json 骨架 + 文章里的声明，校验后调用 astro build
  *
  *   pnpm gen            校验 + 构建
  *   pnpm gen --check    只校验，不构建
  *
- * index.json 只描述骨架：板块的 source、列表的 id / title / desc，不含任何条目。
- * 归属来自每篇文章的 meta.lists；source=date 的板块由 meta.date 编年。
+ * 两份数据，各自只有最小字段：
+ *   文章 meta：title / date / updated / status / lists
+ *   列表       ：id / title
+ * 条目（哪篇在哪个列表）来自 meta.lists；source=date 的板块由 meta.date 编年。
+ * 是否上线只看文件在 articles/ 还是 drafts/，不看 status —— status 只是标签。
  *
- * 校验项：source 合法 / 列表 id 全站唯一 / 声明指向存在的列表 / 列表内条目 id 不重复
+ * 校验项：字段白名单 / source 合法 / 列表 id 全站唯一 / 声明指向存在的列表 / 列表内条目 id 不重复
  * 报告项：没有声明任何列表的文章（只会出现在编年板块）
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { writeRegistry } from './registry.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const INDEX_PATH = path.join(ROOT, 'index.json');
 const ARTICLES_DIR = path.join(ROOT, 'articles');
 const BOARD_IDS = ['list', 'exploration'];
+
+/** 文章 meta 允许的字段；出现别的就报错，防止旧字段悄悄残留 */
+const META_KEYS = new Set(['title', 'date', 'updated', 'status', 'lists']);
+const BOARD_KEYS = new Set(['title', 'source', 'lists']);
+const LIST_KEYS = new Set(['id', 'title', 'max_preview_count']);
 
 const errors = [];
 const warnings = [];
@@ -103,23 +112,17 @@ if (!fs.existsSync(ARTICLES_DIR)) {
     }
     if (!meta.title) fail(`articles/${file} 的 meta 缺 title`);
     if (!meta.date || !/^\d{4}-\d{2}-\d{2}$/.test(meta.date)) fail(`articles/${file} 的 meta.date 不是 YYYY-MM-DD`);
+    for (const k of Object.keys(meta)) {
+      if (!META_KEYS.has(k)) {
+        fail(`articles/${file} 的 meta 有未支持的字段：${k}（只允许 ${[...META_KEYS].join(' / ')}）`);
+      }
+    }
     articles.set(slug, meta);
   }
 }
 
-// ---------- 生成显式注册表（取代 import.meta.glob 的约定式发现） ----------
-const registryPath = path.join(ROOT, 'src', 'lib', 'articles.registry.ts');
-const registrySource = [
-  '// 由 tools/build.mjs 自动生成；不要手改。',
-  '// 作用：把 slug → 文章组件 的映射写成显式代码，避免约定式发现。',
-  'export const registry: Record<string, () => Promise<{ default: unknown }>> = {',
-  ...[...articles.keys()].map((slug) => `  ${JSON.stringify(slug)}: () => import('../../articles/${slug}.astro'),`),
-  '};',
-  '',
-].join('\n');
-fs.mkdirSync(path.dirname(registryPath), { recursive: true });
-fs.writeFileSync(registryPath, registrySource, 'utf8');
-console.log(`注册表：${articles.size} 个条目 → src/lib/articles.registry.ts`);
+// ---------- 注册表：只含 articles/（构建时草稿根本不存在） ----------
+console.log(`注册表：${writeRegistry(false)} 个条目 → src/lib/articles.registry.ts（仅 articles/）`);
 const index = JSON.parse(fs.readFileSync(INDEX_PATH, 'utf8'));
 
 // ---------- 骨架：source 决定列表从哪来 ----------
@@ -130,6 +133,9 @@ for (const board of BOARD_IDS) {
     fail(`index.json 缺少 boards.${board}`);
     continue;
   }
+  for (const k of Object.keys(b)) {
+    if (!BOARD_KEYS.has(k)) fail(`boards.${board} 有未支持的字段：${k}（只允许 title / source / lists）`);
+  }
   if (!b.title) fail(`boards.${board} 缺 title`);
 
   if (b.source !== 'date' && b.source !== 'declared') {
@@ -139,9 +145,6 @@ for (const board of BOARD_IDS) {
 
   if (b.source === 'date') {
     if (b.lists?.length) fail(`boards.${board} 是 source=date，不要写 lists（年份由文章 date 生成）`);
-    for (const y of Object.keys(b.yearNotes ?? {})) {
-      if (!/^\d{4}$/.test(y)) fail(`boards.${board}.yearNotes 的键不是四位年份：${y}`);
-    }
     continue;
   }
 
@@ -159,7 +162,17 @@ for (const board of BOARD_IDS) {
     if (seenListIds.has(list.id)) fail(`boards.${board} 列表 id 重复：${list.id}`);
     seenListIds.add(list.id);
     if (!list.title) fail(`boards.${board}.${list.id} 缺 title`);
-    if ('items' in list) fail(`boards.${board}.${list.id} 不该有 items —— 归属写在文章的 meta.lists 里`);
+    if (
+      list.max_preview_count !== undefined &&
+      (!Number.isInteger(list.max_preview_count) || list.max_preview_count < 0)
+    ) {
+      fail(`boards.${board}.${list.id} 的 max_preview_count 必须是 ≥0 的整数（0 = 全部展示）`);
+    }
+    for (const k of Object.keys(list)) {
+      if (!LIST_KEYS.has(k)) {
+        fail(`boards.${board}.${list.id} 有未支持的字段：${k}（列表只允许 id / title / max_preview_count）`);
+      }
+    }
     if (listOwner.has(list.id)) fail(`列表 id 全站唯一，重复：${list.id}`);
     else listOwner.set(list.id, board);
   }
@@ -170,7 +183,6 @@ const placed = new Map(); // `${list}/${id}` → slug
 let placedCount = 0;
 
 for (const [slug, meta] of articles) {
-  if (meta.status !== 'published') continue;
   if (meta.lists === undefined) continue;
   if (!Array.isArray(meta.lists)) {
     fail(`${slug} 的 meta.lists 必须是数组`);
@@ -207,16 +219,10 @@ for (const [slug, meta] of articles) {
 
 // ---------- 报告 ----------
 for (const [slug, meta] of articles) {
-  if (meta.status === 'published' && !meta.lists?.length) {
-    warn(`只进编年板块（未声明列表）：${slug}`);
-  }
+  if (!meta.lists?.length) warn(`只进编年板块（未声明列表）：${slug}`);
 }
 
-const years = new Set(
-  [...articles.values()]
-    .filter((a) => a.status === 'published')
-    .map((a) => a.date.slice(0, 4)),
-);
+const years = new Set([...articles.values()].map((a) => a.date.slice(0, 4)));
 
 console.log('');
 console.log(`板块：${BOARD_IDS.map((b) => `${b}(${index.boards?.[b]?.source ?? '?'})`).join('  ')}`);

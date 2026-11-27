@@ -4,10 +4,9 @@ import { registry } from '../../lib/articles.registry';
 import { loadIndex, loadArticles, resolveIndex, listsContaining } from '../../lib/index';
 
 export async function getStaticPaths() {
+  // loadArticles() 在 dev 里含 drafts/，构建时只含 articles/
   const articles = loadArticles();
-  return [...articles.values()]
-    .filter((a) => a.status !== 'draft')
-    .map((meta) => ({ params: { slug: meta.slug }, props: { meta } }));
+  return [...articles.values()].map((meta) => ({ params: { slug: meta.slug }, props: { meta } }));
 }
 
 const { meta } = Astro.props;
@@ -23,11 +22,13 @@ const crumbs = primary
     ]
   : [];
 
-// 显式注册表：slug → 组件，由 pnpm gen 生成，不做约定式发现
+// 显式注册表：slug → 组件，由 tools/registry.mjs 生成（dev 含 drafts/，构建只含 articles/）
 const loader = registry[meta.slug];
 
 if (!loader) {
-  throw new Error(`注册表里没有这篇文章：${meta.slug}（先跑 pnpm gen）`);
+  throw new Error(
+    `注册表里没有这篇文章：${meta.slug}。dev 下稍等热更新，或跑 pnpm check 重新生成注册表。`,
+  );
 }
 
 const { default: Body } = (await loader()) as { default: any };

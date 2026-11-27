@@ -4,7 +4,6 @@ export interface Row {
   /** 左侧小字：日期或条目 id */
   label?: string;
   title: string;
-  summary?: string;
   /** 行内的类型/注记 */
   note?: string;
 }
@@ -24,7 +23,6 @@ const { rows } = Astro.props;
           <span class="d">{row.label}</span>
           {row.note && <span class="k">{row.note}</span>}
           <span class="t">{row.title}</span>
-          {row.summary && <span class="s">{row.summary}</span>}
         </a>
       </li>
     ))

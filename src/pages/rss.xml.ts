@@ -4,7 +4,8 @@ import { loadIndex, loadArticles, latestArticles } from '../lib/index';
 
 export async function GET(context: APIContext) {
   const index = loadIndex();
-  const articles = loadArticles();
+  // 订阅源只发正式文章：drafts/ 永远不进 RSS
+  const articles = loadArticles(false);
 
   return rss({
     title: index.site.title,
@@ -13,7 +14,6 @@ export async function GET(context: APIContext) {
     items: latestArticles(articles, 100).map((a) => ({
       title: a.title,
       pubDate: new Date(a.date),
-      description: a.summary ?? '',
       link: `/posts/${a.slug}/`,
     })),
     customData: '<language>zh-cn</language>',

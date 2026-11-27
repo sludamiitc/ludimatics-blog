@@ -12,12 +12,14 @@ interface Props {
   items: BlockItem[];
   moreHref?: string;
   moreLabel?: string;
+  /** 内联样式：用于注入 --c / --c-md / --h（平铺时每个方块的矩形尺寸） */
+  style?: string;
 }
 
-const { title, href, items, moreHref, moreLabel = '全部 →' } = Astro.props;
+const { title, href, items, moreHref, moreLabel = '全部 →', style } = Astro.props;
 ---
 
-<section class="blk">
+<section class="blk" style={style}>
   <header class="blk-head">
     {href ? <a href={href}>{title}</a> : <span>{title}</span>}
   </header>

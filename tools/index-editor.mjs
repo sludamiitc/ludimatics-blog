@@ -54,10 +54,8 @@ function articlePool() {
       return {
         slug,
         title: meta.title ?? slug,
-        subtitle: meta.subtitle ?? '',
         date: meta.date ?? '',
-        tags: meta.tags ?? [],
-        status: meta.status ?? 'published',
+        status: meta.status ?? '',
         lists: Array.isArray(meta.lists) ? meta.lists : [],
       };
     })
@@ -101,10 +99,8 @@ import Note from '../src/components/Note.astro';
 
 export const meta = {
   title: '${title}',
-  subtitle: '',
   date: '${new Date().toISOString().slice(0, 10)}',
-  tags: [],
-  summary: '',
+  updated: '${new Date().toISOString().slice(0, 10)}',
   status: 'draft',
   // 归属：进哪个列表、列表内编号。不加这一行就只出现在 LIST。
   // lists: [{ list: 'softraster', id: '11-25', list_index: 1, note: '第一版' }],

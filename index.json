@@ -9,28 +9,16 @@
   "boards": {
     "list": {
       "title": "LIST",
-      "note": "按时间",
-      "source": "date",
-      "yearNotes": {
-        "2026": "开始记日志的第一年。"
-      }
+      "source": "date"
     },
     "exploration": {
       "title": "EXPLORATION",
-      "note": "按项目",
       "source": "declared",
       "lists": [
         {
-          "id": "softraster",
-          "title": "softraster",
-          "desc": "纯 CPU 的光栅化器，从零写起，目标是先跑通再到软光追。",
-          "period": "2026-11 ~ today"
-        },
-        {
           "id": "math-learning",
           "title": "草舍耕锄之后，怎么学习数学？",
-          "desc": "",
-          "period": ""
+          "max_preview_count": 3
         }
       ]
     }

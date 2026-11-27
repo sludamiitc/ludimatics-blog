@@ -1,0 +1,50 @@
+---
+import Math from '../src/components/Math.astro';
+import Code from '../src/components/Code.astro';
+import Note from '../src/components/Note.astro';
+
+export const meta = {
+  title: '随机变量上的施术之手',
+  date: '2026-11-27',
+  updated: '2026-11-27',
+  status: 'published',
+  lists: [{ list: 'math-learning', id: '11-27', list_index: 0}],
+};
+---
+
+<p>图形学的要害在于渲染，渲染的要害在于BRDF方程，而理解BRDF方程的要害又在于测度论和概率论。现在AI已经能够大大方方证明各种奇妙的猜想了。兴许人类真的会如某些“先知”所言，彻底被AI的通天大黑手征服。虽然在2026年11月27日，我文章写到这里的时候VSCode的代码补全功能依然没有哪怕猜对一次我要写什么。</p>
+<br/>
+
+<p>所以说，我们的时间从得拿去做点什么，如果仅仅是从这个问题出发的话，我觉得拿去学习生成函数是一个比较好的想法。</p>
+
+<br/>
+
+<p>在普林斯顿概率论教材上给出的生成函数的定义是这样的</p>
+
+<Math tex="\displaystyle G_X(s) = \mathbb{E}[s^X] = \int_{-\infty}^{\infty} s^x f_X(x) dx" display />
+
+<p>书上总是从离散型随机变量开始讲，但是如果我们稍稍往后学的话，不难发现我们也可以用连续型随机变量配合狄拉克函数来表示 所以说这个公式是更加通用的。</p>
+
+<br/>
+
+<p>这其实是用一个指数函数去做了一个广义上的卷积，我们不妨把卷积就看成是两个无穷向量的点乘。那么对于独立的离散型随机变量上的卷积来讲。它就可以写成这个点乘</p>
+
+<Math
+  display
+  tex={String.raw`\displaystyle
+\mathrm{Vector}(X) = (p_0,\ p_1,\ p_2,\ \ldots),
+\qquad p_k = \mathbb{P}(X = k)`}
+/>
+
+<Math
+  display
+  tex={String.raw`\displaystyle
+\mathbb{P}(X + Y = t)
+= \mathrm{Vector}(X) \cdot \mathrm{Vector}(t - Y)
+= \sum_{k=0}^{t} p_k\, q_{t-k}`}
+/>
+
+<p>那么我们再回想一下什么是一个点积，<Math tex={String.raw`\langle \mathbf{u}, \mathbf{v} \rangle`} /> 是不是在描述 <Math tex={String.raw`\mathbf{u}`}></Math> 和 <Math tex={String.raw`\mathbf{v}`}></Math> 互相之间的<strong>重叠测度</strong>？那如果<Math tex={String.raw`\mathbf{u},\mathbf{v}`}></Math> 都是归一化的，那么这个点积就是两个向量的<strong>重叠率</strong>。那么恰好，如果我们把所有的随机变量都看成一个向量的话，那么它们已经是归一化的了。这是一个非常曼妙的性质，从这个性质出发，我们上述的
+<Math tex={String.raw`\displaystyle
+\mathbb{P}(X + Y = t)
+= \mathrm{Vector}(X) \cdot \mathrm{Vector}(t - Y)`}/> 的这个点积就自动的将自己说服为了随机变量<Math tex={String.raw`\mathbf{X},\mathbf{t-Y}`}/>的重叠率。而等式右边表示的正是这两个随机变量相等的概率！</p>

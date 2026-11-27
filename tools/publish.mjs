@@ -5,13 +5,13 @@
  *   node tools/publish.mjs publish <slug>
  *   node tools/publish.mjs unpublish <slug>
  *
- * 约定：
- *   articles/  = 公开区（会进构建、会进仓库）
- *   drafts/    = 私有区（.gitignore 掉，永不提交、永不构建）
+ * 权威只有一条：文件在哪个目录。
+ *   articles/  → 构建时存在，线上可见
+ *   drafts/    → 构建时不存在，只有本机 dev 能看到（和正式文章完全一样地渲染）
  *
- * 发布 = 把文件从 drafts/ 移到 articles/、把 meta.status 改成 published。
- * 归属（进哪几个列表、列表内编号）写在文章自己的 meta.lists 里；
- * 本工具不再读写 index.json —— 索引只描述骨架。
+ * 所以"发布"就是一次文件移动。本工具只是顺手把 meta.status 改成对应标签，
+ * 那个字段不参与任何判断 —— 直接用资源管理器拖文件效果一样。
+ * 归属（进哪几个列表、列表内编号）写在文章自己的 meta.lists 里，本工具不碰。
  */
 import fs from 'node:fs';
 import path from 'node:path';

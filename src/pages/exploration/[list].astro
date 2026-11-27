@@ -13,14 +13,12 @@ const articles = loadArticles();
 const items = list.items;
 ---
 
-<Base title={`${list.title} · EXPLORATION`} description={list.desc}>
+<Base title={`${list.title} · EXPLORATION`}>
   <p class="crumb"><a href="/exploration/">EXPLORATION</a> › {list.title}</p>
 
   <header class="proj-page-head">
     <h1 class="page-title">{list.title}</h1>
   </header>
-  {list.period && <p class="proj-period">{list.period}</p>}
-  {list.desc && <p class="lede" style="margin-bottom:2rem">{list.desc}</p>}
 
   <ul class="tl">
     {

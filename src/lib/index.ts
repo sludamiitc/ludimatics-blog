@@ -4,25 +4,27 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const INDEX_PATH = path.join(ROOT, 'index.json');
 const ARTICLES_DIR = path.join(ROOT, 'articles');
+const DRAFTS_DIR = path.join(ROOT, 'drafts');
 
 export type BoardId = 'list' | 'exploration';
 
+/** 渲染期才存在的条目：由 resolveIndex 从文章声明里拼出来 */
 export interface Entry {
-  /** 列表内唯一锚点，如 11-25 */
+  /** 列表内唯一标签，如 11-27 */
   id: string;
-  /** 指向 articles/<slug>.astro */
+  /** 指向 articles/ 或 drafts/ 下的文件（不含扩展名） */
   article: string;
   /** 列表内的一句话注记 */
   note?: string;
-  /** 从声明搬过来的排序键，只参与排序，不渲染 */
+  /** 排序主键，只参与排序，不渲染 */
   list_index?: number;
 }
 
 /** 文章 meta.lists 里的一条归属声明 */
 export interface Placement {
-  /** 列表 id；必须存在于 index.json，且全站唯一 */
+  /** 列表 id，必须存在于 index.json，全站唯一 */
   list: string;
-  /** 该列表内的子编号，自由字符串，列表内唯一；只做标签 */
+  /** 该列表内的子编号，自由字符串，只做标签 */
   id: string;
   /** 排序主键，升序，缺省 0 */
   list_index?: number;
@@ -30,25 +32,20 @@ export interface Placement {
   note?: string;
 }
 
+/** index.json 里的列表：只写 id / title / max_preview_count，items 由 resolveIndex 填 */
 export interface BoardList {
-  /** 板块内唯一，即 URL 段 */
   id: string;
   title: string;
-  desc?: string;
-  /** exploration 专用：时间跨度描述 */
-  period?: string;
+  /** 板块主页最多展示几条链接：0 或未定义 = 全部；决定方块高度 min(条目数, 这个值) */
+  max_preview_count?: number;
   items: Entry[];
 }
 
 export interface Board {
   title: string;
-  note?: string;
-  /** 列表从哪来：date = 由文章 date 编年；declared = 由文章 meta.lists 声明 */
+  /** date = 由文章 date 编年；declared = 由文章 meta.lists 声明 */
   source: 'date' | 'declared';
-  /** source=declared 时必填；source=date 时省略，年份在 resolveIndex 里生成 */
   lists?: BoardList[];
-  /** source=date 专用：年份 → 一句话说明 */
-  yearNotes?: Record<string, string>;
 }
 
 export interface SiteIndex {
@@ -64,13 +61,13 @@ export interface SiteIndex {
 
 export interface ArticleMeta {
   slug: string;
+  /** 文件在哪个目录。drafts/ 只在 dev 里被载入 */
+  dir: 'articles' | 'drafts';
   title: string;
-  subtitle?: string;
   date: string;
   updated?: string;
-  tags: string[];
-  summary?: string;
-  status: 'published' | 'draft' | 'unlisted';
+  /** 纯标签：是否上线只看文件在哪个目录，不看这个字段 */
+  status?: string;
   /** 归属声明；缺省表示只进编年板块 */
   lists?: Placement[];
 }
@@ -103,19 +100,21 @@ function extractMetaObject(source: string): unknown | null {
   return null;
 }
 
-export function parseArticleMeta(slug: string, source: string): ArticleMeta | null {
+export function parseArticleMeta(
+  slug: string,
+  source: string,
+  dir: 'articles' | 'drafts' = 'articles',
+): ArticleMeta | null {
   const raw = extractMetaObject(source) as Partial<ArticleMeta> | null;
   if (!raw || !raw.title || !raw.date) return null;
 
   return {
     slug,
+    dir,
     title: raw.title,
-    subtitle: raw.subtitle,
     date: raw.date,
     updated: raw.updated,
-    tags: Array.isArray(raw.tags) ? raw.tags : [],
-    summary: raw.summary,
-    status: raw.status ?? 'published',
+    status: raw.status,
     lists: Array.isArray(raw.lists) ? raw.lists : [],
   };
 }
@@ -124,17 +123,29 @@ export function loadIndex(): SiteIndex {
   return JSON.parse(fs.readFileSync(INDEX_PATH, 'utf8')) as SiteIndex;
 }
 
-/** 扫描 articles/，得到 slug → 元数据 */
-export function loadArticles(): Map<string, ArticleMeta> {
-  const map = new Map<string, ArticleMeta>();
-  if (!fs.existsSync(ARTICLES_DIR)) return map;
-
-  for (const file of fs.readdirSync(ARTICLES_DIR)) {
+function scanDir(dir: 'articles' | 'drafts', into: Map<string, ArticleMeta>) {
+  const abs = dir === 'articles' ? ARTICLES_DIR : DRAFTS_DIR;
+  if (!fs.existsSync(abs)) return;
+  for (const file of fs.readdirSync(abs)) {
     if (!file.endsWith('.astro') || file.startsWith('_')) continue;
     const slug = file.replace(/\.astro$/, '');
-    const meta = parseArticleMeta(slug, fs.readFileSync(path.join(ARTICLES_DIR, file), 'utf8'));
-    if (meta) map.set(slug, meta);
+    const meta = parseArticleMeta(slug, fs.readFileSync(path.join(abs, file), 'utf8'), dir);
+    if (meta) into.set(slug, meta);
   }
+}
+
+/**
+ * 扫描文章。dev 时同时扫 drafts/，构建时只扫 articles/。
+ *
+ * 判断依据是 Vite 的 import.meta.env.DEV：
+ *   pnpm dev / astro dev  → true，草稿和正式文章被完全同样地渲染、一样出现在列表里
+ *   构建                  → false，drafts/ 里的一切不存在
+ * 于是"发布"就是一次文件移动，没有第二次判断。
+ */
+export function loadArticles(includeDrafts: boolean = import.meta.env.DEV): Map<string, ArticleMeta> {
+  const map = new Map<string, ArticleMeta>();
+  if (includeDrafts) scanDir('drafts', map); // 先草稿，再让正式文章覆盖同名
+  scanDir('articles', map);
   return map;
 }
 
@@ -146,7 +157,7 @@ export function boardLists(index: SiteIndex, board: BoardId): BoardList[] {
 const yearOf = (date: string) => date.slice(0, 4);
 const dayOf = (date: string) => date.slice(5); // MM-DD
 
-/** 中文按拼音比较；numeric 让 11 排在 2 之后，不是字典里那种 11 < 2 */
+/** 中文按拼音比较；numeric 让 11 排在 2 之后 */
 const zh = new Intl.Collator('zh-Hans-CN', { numeric: true });
 
 function compareDeclared(x: Entry, y: Entry, articles: Map<string, ArticleMeta>): number {
@@ -157,15 +168,11 @@ function compareDeclared(x: Entry, y: Entry, articles: Map<string, ArticleMeta>)
   const a = articles.get(x.article);
   const b = articles.get(y.article);
 
-  // 2) subtitle 字典序；没写 subtitle 的用 title 顶上
-  const bySub = zh.compare(a?.subtitle ?? a?.title ?? '', b?.subtitle ?? b?.title ?? '');
-  if (bySub !== 0) return bySub;
-
-  // 3) title 字典序
+  // 2) title 字典序（原来先看 subtitle，现在 meta 里没有 subtitle 了）
   const byTitle = zh.compare(a?.title ?? '', b?.title ?? '');
   if (byTitle !== 0) return byTitle;
 
-  // 4) 兜底：同一份输入永远得到同一份输出
+  // 3) 兜底：同一份输入永远得到同一份输出
   return x.id < y.id ? -1 : x.id > y.id ? 1 : 0;
 }
 
@@ -179,10 +186,10 @@ export function resolveIndex(index: SiteIndex, articles: Map<string, ArticleMeta
   const out = structuredClone(index) as SiteIndex;
   const boardIds = Object.keys(out.boards) as BoardId[];
 
-  // 已发布，按日期倒序；同日用 slug 兜底，保证两次构建结果一致
-  const live = [...articles.values()]
-    .filter((a) => a.status === 'published')
-    .sort((x, y) => (x.date === y.date ? (x.slug < y.slug ? 1 : -1) : x.date < y.date ? 1 : -1));
+  // 日期倒序；同日用 slug 兜底，保证两次构建结果一致
+  const live = [...articles.values()].sort((x, y) =>
+    x.date === y.date ? (x.slug < y.slug ? 1 : -1) : x.date < y.date ? 1 : -1,
+  );
 
   // 1) 编年板块：按年份分组
   for (const boardId of boardIds) {
@@ -194,7 +201,7 @@ export function resolveIndex(index: SiteIndex, articles: Map<string, ArticleMeta
       const y = yearOf(a.date);
       let list = years.get(y);
       if (!list) {
-        list = { id: y, title: y, desc: board.yearNotes?.[y], items: [] };
+        list = { id: y, title: y, items: [] };
         years.set(y, list);
       }
       list.items.push({ id: dayOf(a.date), article: a.slug });
@@ -234,7 +241,7 @@ export function resolveIndex(index: SiteIndex, articles: Map<string, ArticleMeta
     }
   }
 
-  // 5) 声明式板块：list_index → subtitle → title → id
+  // 5) 声明式板块：list_index → title → id
   for (const boardId of boardIds) {
     if (out.boards[boardId].source !== 'declared') continue;
     for (const list of boardLists(out, boardId)) {
@@ -262,7 +269,6 @@ export function listsContaining(
 
 export function latestArticles(articles: Map<string, ArticleMeta>, n = 6): ArticleMeta[] {
   return [...articles.values()]
-    .filter((a) => a.status === 'published')
     .sort((a, b) => (a.date < b.date ? 1 : -1))
     .slice(0, n);
 }

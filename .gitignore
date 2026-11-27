@@ -26,6 +26,9 @@
 !pnpm-lock.yaml
 !tsconfig.json
 
+# 生成物：dev 与构建都会重写，且 dev 版含 drafts/ 路径 —— 绝不进仓库
+/src/lib/articles.registry.ts
+
 # 文档
 !README.md
 !DEPLOY.md

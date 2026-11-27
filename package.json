@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node tools/build.mjs",
     "preview": "astro preview",
     "gen": "node tools/build.mjs",
     "stage": "node tools/stage.mjs",
@@ -16,6 +16,7 @@
     "pub": "node tools/publish.mjs publish",
     "unpub": "node tools/publish.mjs unpublish",
     "ls": "node tools/publish.mjs status",
+    "logo": "python tools/logo-extract.py",
     "astro": "astro"
   },
   "dependencies": {

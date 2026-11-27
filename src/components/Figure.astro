@@ -1,0 +1,36 @@
+---
+/**
+ * 插图。
+ *
+ *   <Figure src="/figs/a.png" alt="说明" caption="图注文字" />
+ *   <Figure src="/figs/a.png" alt="说明" caption="图注" side />   ← 浮到右侧留白
+ *
+ * src 以 / 开头，指向 public/ 下的文件；构建期检查文件是否存在，
+ * 写错路径直接报错，而不是上线后出现一个裂图。
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface Props {
+  /** public/ 下的路径，如 /figs/renderer-01.png */
+  src: string;
+  /** 无障碍描述；纯装饰可留空 */
+  alt?: string;
+  /** 图注。支持纯文本（会原样显示） */
+  caption?: string;
+  /** true = 宽屏时浮到右侧留白，与 <Note> 共用同一条边栏 */
+  side?: boolean;
+}
+
+const { src, alt = '', caption, side = false } = Astro.props;
+
+const file = path.join(process.cwd(), 'public', src.replace(/^\//, ''));
+if (!fs.existsSync(file)) {
+  throw new Error(`<Figure src="${src}"> 找不到图片：public${src}`);
+}
+---
+
+<figure class:list={[{ 'fig-side': side }]}>
+  <img src={src} alt={alt} loading="lazy" decoding="async" />
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>

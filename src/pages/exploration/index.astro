@@ -1,10 +1,31 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Block from '../../components/Block.astro';
+import { blockHeight, blockSpan } from '../../lib/design';
 import { loadIndex, loadArticles, resolveIndex, boardLists } from '../../lib/index';
 
 const articles = loadArticles();
-const lists = boardLists(resolveIndex(loadIndex(), articles), 'exploration');
+const resolved = resolveIndex(loadIndex(), articles);
+
+const blocks = boardLists(resolved, 'exploration').map((list) => {
+  // max_preview_count：0 或未定义 = 全部展示；>0 = 最多展示这么多条
+  const max = list.max_preview_count ?? 0;
+  const shown = max > 0 ? list.items.slice(0, max) : list.items;
+
+  const titles = shown.map((it) => articles.get(it.article)?.title ?? '');
+  const style = `--c:${blockSpan(list.title, titles)};--h:${blockHeight(shown.length)}`;
+
+  return {
+    list,
+    style,
+    items: shown
+      .map((item, i) => {
+        const a = articles.get(item.article);
+        return a ? { href: `/posts/${a.slug}/`, text: a.title, mark: item.id } : null;
+      })
+      .filter((x): x is { href: string; text: string; mark: string } => x !== null),
+  };
+});
 ---
 
 <Base title="EXPLORATION">
@@ -13,18 +34,14 @@ const lists = boardLists(resolveIndex(loadIndex(), articles), 'exploration');
   </header>
   <div class="blk-grid">
     {
-      lists.map((list) => (
+      blocks.map(({ list, style, items }) => (
         <Block
           title={list.title}
           href={`/exploration/${list.id}/`}
-          items={list.items.map((item) => {
-            const a = articles.get(item.article);
-            return a
-              ? { href: `/posts/${a.slug}/`, text: a.title, mark: item.id }
-              : null;
-          }).filter((x): x is { href: string; text: string; mark: string } => x !== null)}
+          items={items}
           moreHref={`/exploration/${list.id}/`}
-          moreLabel={list.period ? `${list.period} · 项目页 →` : '项目页 →'}
+          moreLabel="项目页 →"
+          style={style}
         />
       ))
     }

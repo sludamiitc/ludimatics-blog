@@ -15,16 +15,15 @@ const articles = loadArticles();
 const rows = list.items
   .map((item) => {
     const a = articles.get(item.article);
-    if (!a || a.status !== 'published') return null;
-    return { href: `/posts/${a.slug}/`, label: item.id, title: a.title, summary: a.summary, note: item.note };
+    if (!a) return null;
+    return { href: `/posts/${a.slug}/`, label: item.id, title: a.title, note: item.note };
   })
   .filter((r): r is NonNullable<typeof r> => r !== null);
 ---
 
-<Base title={`${list.title} · LIST`} description={list.desc}>
+<Base title={`${list.title} · LIST`}>
   <p class="crumb"><a href="/list/">LIST</a> › {list.title}</p>
   <h1 class="page-title">{list.title}</h1>
-  {list.desc && <p class="lede" style="margin-bottom:2rem">{list.desc}</p>}
 
   {rows.length > 0 ? <EntryList rows={rows} /> : <p class="empty">这一年还没有文章。</p>}
 </Base>

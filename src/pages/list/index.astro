@@ -26,7 +26,6 @@ const lists = boardLists(resolveIndex(loadIndex(), articles), 'list');
                 <a href={`/posts/${a.slug}/`}>
                   <span class="eid">{item.id}</span>
                   <span class="et">{a.title}</span>
-                  <span class="em">{a.tags.slice(0, 2).join(' · ')}</span>
                 </a>
               </li>
             );

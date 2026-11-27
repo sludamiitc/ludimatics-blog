@@ -2,6 +2,8 @@
 import '../styles/global.css';
 import 'katex/dist/katex.min.css';
 import '@fontsource/noto-serif-sc/600.css';
+import '@fontsource/noto-serif-sc/700.css'; // 700 是 <strong> 用的；没有它中文加粗是假的
+import { designVars } from '../lib/design';
 
 interface Props {
   title?: string;
@@ -21,6 +23,14 @@ const pageTitle = title ? `${title} · Ludimatics` : 'Ludimatics — 开发日�
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- 图标：手写 Lud 标；有 SVG 就优先用它（2x/3x 屏不吃亏），PNG 兜底 -->
+    <link rel="icon" type="image/svg+xml" href="/brand/logo.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/brand/favicon-light-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/brand/favicon-dark-32.png" sizes="32x32" type="image/png" media="(prefers-color-scheme: dark)" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-180.png" />
+    <!-- 设计层：尺寸只在 src/lib/design.ts 定义，这里注入成 CSS 变量 -->
+    <style is:inline set:html={`:root{${designVars()}}`} />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <meta property="og:title" content={pageTitle} />
@@ -29,7 +39,7 @@ const pageTitle = title ? `${title} · Ludimatics` : 'Ludimatics — 开发日�
     <link rel="alternate" type="application/rss+xml" title="Ludimatics" href="/rss.xml" />
     <link
       rel="preload"
-      href="/fonts/XCharter-Regular.woff2"
+      href="/fonts/Times-Regular.woff2"
       as="font"
       type="font/woff2"
       crossorigin
@@ -55,8 +65,11 @@ const pageTitle = title ? `${title} · Ludimatics` : 'Ludimatics — 开发日�
   </head>
   <body>
     <header class="site-head">
-      <a class="mark" href="/">Ludimatics</a>
-      <div class="head-right">
+      <a class="mark" href="/" aria-label="Ludimatics">
+        <img class="mark-img" src="/brand/logo.svg" alt="" width="26" height="26" />
+      </a>
+      <div class="head-mid">
+        <a class="brand" href="/">Ludimatics</a>
         <nav>
           <a href="/site/">SITE</a>
           <a href="/list/">LIST</a>
@@ -64,11 +77,11 @@ const pageTitle = title ? `${title} · Ludimatics` : 'Ludimatics — 开发日�
           <a href="/about/">ABOUT</a>
           <a href="/rss.xml">RSS</a>
         </nav>
-        <div class="ctl">
-          <button type="button" data-act="theme" aria-label="明暗主题">◐</button>
-          <button type="button" data-act="width" aria-label="版心宽度">⇔</button>
-          <button type="button" data-act="size" aria-label="字号">A</button>
-        </div>
+      </div>
+      <div class="ctl">
+        <button type="button" data-act="theme" aria-label="明暗主题">◐</button>
+        <button type="button" data-act="width" aria-label="版心宽度">⇔</button>
+        <button type="button" data-act="size" aria-label="字号">A</button>
       </div>
     </header>
 

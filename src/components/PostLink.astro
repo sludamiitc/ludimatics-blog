@@ -1,0 +1,30 @@
+---
+/**
+ * 引用站内另一篇文章：显示标题从目标文章的 meta 里取，链接到 /posts/<slug>/。
+ *
+ *   <PostLink slug="generating-function" />
+ *   <PostLink slug="generating-function" text="换个说法" />
+ *
+ * slug 就是 articles/ 或 drafts/ 下的文件名。写错时在构建期直接抛错，
+ * 而不是等你上线后点出一个 404。
+ */
+import { loadArticles } from '../lib/index';
+
+interface Props {
+  /** 目标文章的 slug（文件名，不含 .astro） */
+  slug: string;
+  /** 覆盖显示文字；默认用目标文章的 title */
+  text?: string;
+}
+
+const { slug, text } = Astro.props;
+const target = loadArticles().get(slug);
+
+if (!target) {
+  throw new Error(
+    `<PostLink slug="${slug}"> 找不到这篇文章：articles/ 和 drafts/ 里都没有 ${slug}.astro`,
+  );
+}
+---
+
+<a href={`/posts/${slug}/`}>{text ?? target.title}</a>
