@@ -12,10 +12,15 @@ export const meta = {
 };
 ---
 
-<p>图形学的要害在于渲染，渲染的要害在于BRDF方程，而理解BRDF方程的要害又在于测度论和概率论。现在AI已经能够大大方方证明各种奇妙的猜想了。兴许人类真的会如某些“先知”所言，彻底被AI的通天大黑手征服。虽然在2026年11月27日，我文章写到这里的时候VSCode的代码补全功能依然没有哪怕猜对一次我要写什么。</p>
+<p>图形学的要害在于渲染，渲染的要害在于BRDF方程，而理解BRDF方程的要害又在于测度论和概率论。现在AI已经能够大大方方证明各种奇妙的猜想了。兴许人类真的会如某些“先知”所言，彻底被AI的通天大黑手征服。虽然在2026年11月27日，我文章写到这里的时候Copilot依然没有哪怕猜对一次我要写什么。</p>
+
 <br/>
 
-<p>所以说，我们的时间从得拿去做点什么，如果仅仅是从这个问题出发的话，我觉得拿去学习生成函数是一个比较好的想法。</p>
+<p>我非常推荐各位在写博客、文章、论文的时候用VSCode并打开Copilot补全功能。它是一个非常好用的文章评判工具。如果各位读者在写文章的时候发现Copilot每每先你一步猜出你想说什么，让你可以愉快的猛敲Tab行云流水写完一篇文章的话。那这篇文章就没有必要发出来了。</p>
+
+<br/>
+
+<p>当我真正的开始阅读图形学相关的论文的时候，只是深感自身数学知识的匮乏。所以是时候去系统性的学习一下数学了，在这个数学被AI及其无端崇拜者逐渐消灭的年代。</p>
 
 <br/>
 
@@ -44,7 +49,29 @@ export const meta = {
 = \sum_{k=0}^{t} p_k\, q_{t-k}`}
 />
 
-<p>那么我们再回想一下什么是一个点积，<Math tex={String.raw`\langle \mathbf{u}, \mathbf{v} \rangle`} /> 是不是在描述 <Math tex={String.raw`\mathbf{u}`}></Math> 和 <Math tex={String.raw`\mathbf{v}`}></Math> 互相之间的<strong>重叠测度</strong>？那如果<Math tex={String.raw`\mathbf{u},\mathbf{v}`}></Math> 都是归一化的，那么这个点积就是两个向量的<strong>重叠率</strong>。那么恰好，如果我们把所有的随机变量都看成一个向量的话，那么它们已经是归一化的了。这是一个非常曼妙的性质，从这个性质出发，我们上述的
-<Math tex={String.raw`\displaystyle
-\mathbb{P}(X + Y = t)
-= \mathrm{Vector}(X) \cdot \mathrm{Vector}(t - Y)`}/> 的这个点积就自动的将自己说服为了随机变量<Math tex={String.raw`\mathbf{X},\mathbf{t-Y}`}/>的重叠率。而等式右边表示的正是这两个随机变量相等的概率！</p>
+<p>那么我们再回想一下什么是一个点积，<Math tex={String.raw`\langle \mathbf{u}, \mathbf{v} \rangle`} /> 是不是在描述 <Math tex={String.raw`\mathbf{u}`}/> 和 <Math tex={String.raw`\mathbf{v}`}/> 互相之间的<strong>重叠测度</strong>？那如果<Math tex={String.raw`\mathbf{u},\mathbf{v}`}/> 都是归一化的，那么这个点积就是两个向量的<strong>重叠率</strong>。恰好，如果我们把所有的随机变量都看成一个向量的话，那么它们已经是归一化的了。这是一个非常曼妙的性质，从这个性质出发，我们上述的
+<Math tex={String.raw`\displaystyle \mathbb{P}(X + Y = t) = \mathrm{Vector}(X) \cdot \mathrm{Vector}(t - Y)`}/> 的这个点积就自动的将自己说服为了随机变量<Math tex={String.raw`\mathbf{X},\mathbf{t-Y}`}/>的重叠率。而等式右边表示的正是这两个随机变量相等的概率。</p>
+
+<br/>
+
+<p>现在我们就掌握了一个概念，即<strong>点积描述了两个向量的相似程度</strong>。或者说点乘(或者说是卷积)一个向量 <Math tex={String.raw`s`} /> 这个操作就是用 <Math tex={String.raw`s`} /> 对于这个向量进行<strong>特征提取</strong>。</p>
+
+<br/>
+
+<p>这里我喜欢用一个大家最熟悉不过的例子，就是欧氏空间下的笛卡尔坐标系。假如说我们现在有一个三维空间下的向量 <Math tex={String.raw`\mathbf{v}`}/> 我们对它进行的最常见的特征提取就是分别用 <Math tex={String.raw`(1,0,0),(0,1,0),(0,0,1)`}/> 三个常量去对它进行特征提取来看它和这三个向量的相似程度是多少。假如我们点乘得到 <Math tex={String.raw`\mathbf{v} \cdot (1,0,0) = a,\mathbf{v} \cdot (0,1,0) = b,\mathbf{v} \cdot (0,0,1) = c`}/> 在这个时候教授解析几何的老师们通常就会告诉你 <Math tex={String.raw`(a,b,c) = \mathbf{v}`} />。 当然写书的人若不是发神经病一般都会写作 <Math tex={String.raw`\mathbf{v} = (a,b,c)`} />。 不过为了展示我所希望展示的数学的演算过程，我就把 <Math tex={String.raw`\mathbf{v}`} /> 放到了右边。 </p>
+
+<br/>
+
+<p>在质问老师们凭什么武断的认为 <Math tex={String.raw`\mathbf{v} = (a,b,c)`} /> 之前，不妨先不要先入为主的成为一个疯狂的怀疑论者。我们先思考一下：<strong>这说明了什么</strong>？这说明了如果用 <Math tex={String.raw`\mathcal{B} = \{(1,0,0),(0,1,0),(0,0,1)\}`} /> 对于三维欧氏空间 <Math tex={String.raw`\mathbb{R}^3`} /> 的任意一个向量进行特征提取，其提取出来的三个特征可以直接<strong>还原</strong>这个向量。或者说：它们对于向量 <Math tex={String.raw`\mathbf{v}`} /> 的特征提取是<strong>完备的</strong>。</p>
+
+<br/>
+
+<p>如果要真的证明这种特征提取为什么是完备的，我们就得进行一个非常愚蠢的数学推导</p>
+
+<br/>
+
+<p>对于 <Math tex={String.raw`\mathbf{v} \in \mathbb{R}^3`} /> 我们假设 <Math tex={String.raw`\mathbf{v} = (v_1,v_2,v_3)`} />。那么就有 <Math tex={String.raw`\begin{cases} \mathbf{v} \cdot (1,0,0) = v_1 \\ \mathbf{v} \cdot (0,1,0) = v_2\\ \mathbf{v} \cdot (0,0,1) = v_3 \end{cases} `} /> 而显然，有序三元组 <Math tex={String.raw`(v_1,v_2,v_3)`} /> 与向量 <Math tex={String.raw`\mathbf{v}`} /> 存在一一对应的关系：<Math tex={String.raw`(v_1,v_2,v_3)\;\longleftrightarrow\;\mathbf{v}=(v_1,v_2,v_3)`} />。也就是说，映射 <Math tex={String.raw`\varphi\colon (v_1,v_2,v_3)\mapsto (v_1,v_2,v_3)`} /> 是双射。这样我就可以断言用 <Math tex={String.raw`\mathcal{B} = \{(1,0,0),(0,1,0),(0,0,1)\}`} /> 对 <Math tex={String.raw`\mathbf{v}`} /> 的特征提取是完备的。 </p>
+
+<br/>
+
+<p> 映射<Math tex={String.raw`(v_1,v_2,v_3)\;\longleftrightarrow\;(v_1,v_2,v_3)`} /> 确实有点同义反复，但是它却是必要的推导。 </p>
